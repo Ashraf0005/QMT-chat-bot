@@ -9,6 +9,9 @@ load_dotenv(dotenv_path=env_path)
 # Groq API Key
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 
+# Tavily Web Search API Key
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "").strip()
+
 # Supported Groq Models
 SUPPORTED_MODELS = [
     {
@@ -33,8 +36,8 @@ SUPPORTED_MODELS = [
         "default": False
     },
     {
-        "id": "gemma2-9b-it",
-        "name": "Gemma 2 9B (Instruct)",
+        "id": "openai/gpt-oss-120b",
+        "name": "openai/gpt-oss-120b",
         "description": "Google's lightweight, high-performance open model.",
         "context_window": 8192,
         "default": False

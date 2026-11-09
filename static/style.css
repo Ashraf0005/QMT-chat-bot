@@ -359,9 +359,20 @@ html, body {
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
+.status-dot.blue {
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
 .status-dot.red {
   background-color: var(--error);
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.sidebar-footer-statuses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* --------------------------------------------------------------------------
@@ -1016,6 +1027,146 @@ html, body {
 /* --------------------------------------------------------------------------
    RESPONSIVE DESIGN (Tablets & Mobile)
    -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   TAVILY WEB SEARCH STYLES
+   -------------------------------------------------------------------------- */
+.badge-search {
+  background-color: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-web-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.btn-web-search:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+}
+
+.btn-web-search.active {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(14, 165, 233, 0.5);
+  color: #38bdf8;
+  box-shadow: 0 0 14px rgba(14, 165, 233, 0.25);
+}
+
+.btn-web-search.active svg {
+  animation: search-pulse 2s infinite ease-in-out;
+}
+
+@keyframes search-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+/* In-message live search status indicator */
+.search-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  font-size: 13px;
+  color: #38bdf8;
+}
+
+.search-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(56, 189, 248, 0.3);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Source citations container */
+.search-sources-box {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+}
+
+.sources-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sources-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-size: 12px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  max-width: 240px;
+}
+
+.source-pill:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(14, 165, 233, 0.12);
+  transform: translateY(-1px);
+}
+
+.source-pill-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .mobile-only {
     display: flex;

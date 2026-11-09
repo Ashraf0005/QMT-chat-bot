@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aura — Groq Personal Assistant</title>
+  <title>Aura — Groq AI Assistant with Tavily Web Search</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
   <!-- Highlight.js for Code Highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  
+
   <!-- Marked.js for Markdown Rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="/static/style.css" />
 </head>
+
 <body class="dark-theme">
   <div class="app-container">
     <!-- SIDEBAR -->
@@ -26,13 +30,14 @@
       <div class="sidebar-header">
         <div class="brand">
           <div class="brand-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
             </svg>
           </div>
           <div class="brand-info">
             <span class="brand-title">Aura Assistant</span>
-            <span class="brand-sub">Groq Ultra-Fast AI</span>
+            <span class="brand-sub">Groq LPU + Tavily Search</span>
           </div>
         </div>
         <button id="close-sidebar-btn" class="icon-btn mobile-only" aria-label="Close sidebar">
@@ -70,7 +75,8 @@
         <!-- Custom Prompt Toggle / Editor -->
         <div id="custom-prompt-container" class="custom-prompt-container hidden">
           <label class="section-sublabel">System Prompt</label>
-          <textarea id="system-prompt-input" rows="4" class="form-textarea" placeholder="Enter instructions for how your assistant should behave..."></textarea>
+          <textarea id="system-prompt-input" rows="4" class="form-textarea"
+            placeholder="Enter instructions for how your assistant should behave..."></textarea>
         </div>
       </div>
 
@@ -80,7 +86,7 @@
           <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile - Best)</option>
           <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant - Fastest)</option>
           <option value="mixtral-8x7b-32768">Mixtral 8x7B (32k Context)</option>
-          <option value="gemma2-9b-it">Gemma 2 9B (Instruct)</option>
+          <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
         </select>
       </div>
 
@@ -102,14 +108,22 @@
 
       <!-- Sidebar Footer -->
       <div class="sidebar-footer">
-        <div class="key-status-indicator" id="key-status-indicator" title="API Key Status">
-          <span class="status-dot green" id="status-dot"></span>
-          <span class="status-text" id="status-text">Groq Connected</span>
+        <div class="sidebar-footer-statuses">
+          <div class="key-status-indicator" id="key-status-indicator" title="Groq API Key Status">
+            <span class="status-dot green" id="status-dot"></span>
+            <span class="status-text" id="status-text">Groq Connected</span>
+          </div>
+          <div class="key-status-indicator" id="tavily-status-indicator" title="Tavily Web Search Status">
+            <span class="status-dot" id="tavily-status-dot"></span>
+            <span class="status-text" id="tavily-status-text">Tavily Web Search</span>
+          </div>
         </div>
-        <button id="open-settings-btn" class="icon-btn" title="Settings & API Key" aria-label="Settings">
+        <button id="open-settings-btn" class="icon-btn" title="Settings & API Keys" aria-label="Settings">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
           </svg>
         </button>
       </div>
@@ -130,11 +144,20 @@
           <div class="header-info">
             <span id="active-persona-badge" class="badge badge-accent">Elite Executive Assistant</span>
             <span id="active-model-badge" class="badge badge-subtle">llama-3.3-70b</span>
+            <span id="active-search-badge" class="badge badge-search hidden">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span>Web Search Active</span>
+            </span>
           </div>
         </div>
 
         <div class="header-right">
-          <button id="export-chat-btn" class="icon-btn" title="Export conversation as Markdown" aria-label="Export chat">
+          <button id="export-chat-btn" class="icon-btn" title="Export conversation as Markdown"
+            aria-label="Export chat">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
@@ -148,7 +171,8 @@
             </svg>
           </button>
           <button id="theme-toggle-btn" class="icon-btn" title="Toggle Dark/Light Mode" aria-label="Theme toggle">
-            <svg id="theme-icon-sun" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <svg id="theme-icon-sun" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none"
+              stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="5"></circle>
               <line x1="12" y1="1" x2="12" y2="3"></line>
               <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -159,7 +183,8 @@
               <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
-            <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
           </button>
@@ -171,15 +196,29 @@
         <!-- Welcome Screen (shown when chat is empty) -->
         <div class="welcome-screen" id="welcome-screen">
           <div class="welcome-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+              </polygon>
             </svg>
           </div>
           <h1 class="welcome-title">Good day. I am Aura.</h1>
-          <p class="welcome-desc">Your personal AI assistant, powered by Groq's ultra-low-latency LPU™ inference engine. How can I assist you today?</p>
-          
+          <p class="welcome-desc">Your personal AI assistant, powered by Groq's ultra-low-latency LPU™ inference and Tavily real-time web search. How can I assist you today?</p>
+
           <div class="starter-cards">
-            <div class="starter-card" data-prompt="Organize my workday: Help me create a high-leverage daily schedule using time-blocking and the Eisenhower Matrix.">
+            <div class="starter-card"
+              data-prompt="Search the web for the latest artificial intelligence breakthroughs and summarize the top discoveries."
+              data-search="true">
+              <div class="starter-card-icon">🌐</div>
+              <div class="starter-card-text">
+                <span class="starter-card-title">Live Web Research</span>
+                <span class="starter-card-sub">Latest AI breakthroughs via real-time Tavily search</span>
+              </div>
+            </div>
+
+            <div class="starter-card"
+              data-prompt="Organize my workday: Help me create a high-leverage daily schedule using time-blocking and the Eisenhower Matrix.">
               <div class="starter-card-icon">📅</div>
               <div class="starter-card-text">
                 <span class="starter-card-title">Daily Planning</span>
@@ -187,7 +226,8 @@
               </div>
             </div>
 
-            <div class="starter-card" data-prompt="Write a production-grade Python script that connects to an API, handles rate limits with exponential backoff, and logs output cleanly.">
+            <div class="starter-card"
+              data-prompt="Write a production-grade Python script that connects to an API, handles rate limits with exponential backoff, and logs output cleanly.">
               <div class="starter-card-icon">⚡</div>
               <div class="starter-card-text">
                 <span class="starter-card-title">Python Automation</span>
@@ -195,15 +235,8 @@
               </div>
             </div>
 
-            <div class="starter-card" data-prompt="Explain how Groq's Language Processing Unit (LPU) architecture achieves 500+ tokens/second compared to traditional GPUs.">
-              <div class="starter-card-icon">🚀</div>
-              <div class="starter-card-text">
-                <span class="starter-card-title">Deep Dive</span>
-                <span class="starter-card-sub">How Groq LPUs differ from GPUs</span>
-              </div>
-            </div>
-
-            <div class="starter-card" data-prompt="Draft a persuasive executive summary proposing the adoption of AI-driven workflow automation in our department.">
+            <div class="starter-card"
+              data-prompt="Draft a persuasive executive summary proposing the adoption of AI-driven workflow automation in our department.">
               <div class="starter-card-icon">✍️</div>
               <div class="starter-card-text">
                 <span class="starter-card-title">Executive Proposal</span>
@@ -219,14 +252,20 @@
       <!-- INPUT DOCK -->
       <footer class="chat-input-wrapper">
         <div class="chat-input-box">
-          <textarea
-            id="user-input"
-            rows="1"
-            placeholder="Type your message... (Shift + Enter for new line)"
-            aria-label="User input"
-          ></textarea>
+          <textarea id="user-input" rows="1" placeholder="Type your message... (Shift + Enter for new line)"
+            aria-label="User input"></textarea>
 
           <div class="input-actions">
+            <!-- Web Search Toggle Button -->
+            <button id="web-search-toggle-btn" class="btn-web-search" type="button" title="Toggle Tavily Web Search" aria-label="Toggle Web Search">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span>Web Search</span>
+            </button>
+
             <button id="stop-btn" class="btn-stop hidden" title="Stop generating">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <rect x="6" y="6" width="12" height="12" rx="2"></rect>
@@ -235,7 +274,8 @@
             </button>
 
             <button id="send-btn" class="btn-send" title="Send message (Enter)" aria-label="Send message">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
               </svg>
@@ -243,7 +283,7 @@
           </div>
         </div>
         <div class="input-footer-note">
-          <span>Groq LPU™ Inference • Ultra-Fast Personal Assistant • Press <strong>Enter</strong> to send</span>
+          <span>Groq LPU™ Inference • Tavily Real-Time Web Search • Press <strong>Enter</strong> to send</span>
         </div>
       </footer>
     </main>
@@ -253,7 +293,7 @@
   <div class="modal-backdrop hidden" id="settings-modal">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h2 class="modal-title">Settings & Groq API Key</h2>
+        <h2 class="modal-title">Settings & API Keys</h2>
         <button id="close-modal-btn" class="icon-btn" aria-label="Close settings">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -262,22 +302,35 @@
         </button>
       </div>
       <div class="modal-body">
+        <!-- Groq API Key -->
         <div class="form-group">
           <label for="api-key-input" class="form-label">
             Groq API Key
             <span class="label-hint">Saved securely in browser local storage</span>
           </label>
           <div class="input-group">
-            <input
-              type="password"
-              id="api-key-input"
-              class="form-input"
-              placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
-            />
+            <input type="password" id="api-key-input" class="form-input" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx" />
             <button id="toggle-key-visibility-btn" class="btn btn-secondary" type="button">Show</button>
           </div>
           <p class="field-help">
-            Don't have a key? Get one for free at <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>. You can also save it inside the <code>.env</code> file.
+            Get your key from <a href="https://console.groq.com/keys" target="_blank"
+              rel="noopener">console.groq.com/keys</a>. You can also save it inside the <code>.env</code> file.
+          </p>
+        </div>
+
+        <!-- Tavily Web Search API Key -->
+        <div class="form-group">
+          <label for="tavily-key-input" class="form-label">
+            Tavily Web Search API Key
+            <span class="label-hint">For live web queries (1,000 free searches/mo)</span>
+          </label>
+          <div class="input-group">
+            <input type="password" id="tavily-key-input" class="form-input" placeholder="tvly-xxxxxxxxxxxxxxxxxxxx" />
+            <button id="toggle-tavily-vis-btn" class="btn btn-secondary" type="button">Show</button>
+          </div>
+          <p class="field-help">
+            Get your key from <a href="https://app.tavily.com" target="_blank"
+              rel="noopener">app.tavily.com</a>. You can also save it inside the <code>.env</code> file.
           </p>
         </div>
 
@@ -291,7 +344,8 @@
         <div id="key-test-feedback" class="feedback-alert hidden"></div>
       </div>
       <div class="modal-footer">
-        <button id="test-key-btn" class="btn btn-secondary">Test Connection</button>
+        <button id="test-key-btn" class="btn btn-secondary" title="Test Groq Connection">Test Groq</button>
+        <button id="test-tavily-btn" class="btn btn-secondary" title="Test Tavily Web Search">Test Tavily</button>
         <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
       </div>
     </div>
@@ -300,5 +354,5 @@
   <!-- Main JavaScript Application -->
   <script src="/static/script.js"></script>
 </body>
-</html>
 
+</html>

@@ -1,44 +1,53 @@
-# Aura — Groq AI Personal Assistant
+# Aura — Groq AI Personal Assistant with Tavily Web Search
 
-A modern, high-performance, Python-based Personal AI Assistant powered by **Groq's ultra-low-latency LPU™ inference engine**. Features a clean, responsive HTML/CSS/JS chat interface, Server-Sent Events (SSE) token streaming, multiple persona presets, customizable system prompts, and conversation history.
+A modern, high-performance, Python-based Personal AI Assistant powered by **Groq's ultra-low-latency LPU™ inference engine** and **Tavily AI Search Engine** for real-time web grounding. Features a clean, responsive HTML/CSS/JS chat interface, Server-Sent Events (SSE) token streaming, multiple persona presets, customizable system prompts, web search citations, and conversation history.
 
 ---
 
 ## 🌟 Key Features
 
 1. **Ultra-Fast Streaming**: Real-time word-by-word streaming responses using Server-Sent Events (SSE) and Groq's high-speed inference (up to 500+ tokens/sec).
-2. **Proper System Prompts & Personas**:
+2. **Real-Time Web Search (Powered by Tavily)**:
+   - One-click **Web Search** toggle in the chat interface.
+   - Real-time search status animation and live indicator.
+   - Rich interactive web source citation pills with domain titles and direct links.
+   - Context injection into the LLM prompt with inline citation instructions.
+3. **Proper System Prompts & Personas**:
    - **Elite Executive Assistant** *(Default)*: Proactive, strategic, structured daily planning, task prioritization, and decision support.
    - **Senior Tech Architect**: Deep engineering analysis, system design, and production-grade code.
    - **Ultra-Concise Advisor**: High-efficiency, zero fluff, straight to the point.
    - **Creative Strategist & Writer**: Copywriting, storytelling, brainstorming, and persuasive communication.
    - **Socratic Mentor**: Intuitive explanations, analogies, and educational guidance.
    - **Custom Persona**: Live in-browser system prompt editor to tailor the assistant's behavior on the fly.
-3. **Modern Chat UI**:
+4. **Modern Chat UI**:
    - Clean dark/light theme with glassmorphic cards and polished typography.
    - Rich Markdown rendering (headers, bolding, lists, blockquotes, tables).
    - Code blocks with syntax highlighting and one-click **Copy code** button.
    - Auto-growing multiline input (Enter to send, Shift + Enter for new lines).
    - Dynamic **Stop Generation** button to abort streaming at any time.
    - Conversation management: Multi-chat history saved locally, rename, delete, clear, and **Export to Markdown**.
-   - Groq API Key configuration in either `.env` or the in-app **Settings Modal** (with a "Test Connection" button).
+   - API Key configuration in either `.env` or the in-app **Settings Modal** with test buttons for both **Groq** and **Tavily**.
 
 ---
 
 ## 🚀 Quickstart
 
-### 1. Configure Your Groq API Key
-You can set your Groq API key in either of two ways:
+### 1. Configure Your API Keys
+
+You can configure your keys in either of two ways:
 
 #### Option A: In the `.env` file (Recommended)
-Open the `.env` file in this directory and paste your Groq API key:
+Open `.env` in this directory and configure your keys:
 ```env
+# Groq API Key (https://console.groq.com/keys)
 GROQ_API_KEY=gsk_your_actual_groq_api_key_here
+
+# Tavily Web Search API Key (https://app.tavily.com - 1,000 free searches/month)
+TAVILY_API_KEY=tvly-your_actual_tavily_api_key_here
 ```
-*(Get a free key from [Groq Console](https://console.groq.com/keys))*
 
 #### Option B: Directly in the Web UI
-Leave `.env` empty. When you open the web UI, click the **Settings ⚙️** icon in the bottom-left of the sidebar, enter your API key, click **Test Connection**, and click **Save Settings**. It will be saved securely in your browser's local storage.
+Open the web UI, click the **Settings ⚙️** icon in the bottom-left of the sidebar, enter your Groq and/or Tavily keys, test connections, and click **Save Settings**. Keys are stored safely in your browser's local storage.
 
 ---
 
@@ -64,17 +73,18 @@ Open your browser and navigate to:
 
 ```
 QMT chat bot/
-├── app.py              # FastAPI web server, SSE streaming endpoint & API key validation
+├── app.py              # FastAPI server, SSE streaming endpoint, web search & key validation
 ├── config.py           # Model definitions, environment loading, and defaults
 ├── prompts.py          # Curated system prompt presets and persona definitions
-├── requirements.txt    # Python dependencies (fastapi, groq, uvicorn, python-dotenv)
+├── tavily_service.py   # Asynchronous Tavily search client & prompt context formatter
+├── requirements.txt    # Python dependencies (fastapi, groq, tavily-python, uvicorn, python-dotenv)
 ├── run.bat             # 1-click Windows launcher
 ├── .env.example        # Environment variables template
-├── .env                # Local secrets configuration (put GROQ_API_KEY here)
+├── .env                # Local secrets configuration (GROQ_API_KEY, TAVILY_API_KEY)
 └── static/
-    ├── index.html      # Responsive chat interface with sidebar and modal
-    ├── style.css       # Dark/Light theme styling, markdown formatting, animations
-    └── script.js       # Client engine (SSE streaming reader, state, conversation history)
+    ├── index.html      # Responsive chat interface with sidebar, search toggle, and modal
+    ├── style.css       # Dark/Light theme styling, search status bars, citation pills
+    └── script.js       # Client engine (SSE streaming, web search toggle, history)
 ```
 
 ---
@@ -86,13 +96,13 @@ QMT chat bot/
 | `llama-3.3-70b-versatile` *(Default)* | 128k | Most capable reasoning, analysis, and coding intelligence. |
 | `llama-3.1-8b-instant` | 128k | Extremely fast inference for everyday queries. |
 | `mixtral-8x7b-32768` | 32k | Powerful Mixture-of-Experts model. |
-| `gemma2-9b-it` | 8k | Google Gemma 2 instruct model on Groq. |
+| `openai/gpt-oss-120b` | 8k | High-performance open model. |
 
 ---
 
 ## 🛠️ Customizing System Prompts
 
-To adjust or add new personas permanently, edit [`prompts.py`](file:///e:/QMT%20PROJECT/QMT%20chat%20bot/prompts.py):
+To adjust or add new personas permanently, edit [`prompts.py`](file:///e:/QMT%20PROJECT/New%20folder/QMT-chat-bot/prompts.py):
 ```python
 PERSONA_PRESETS["my_custom_persona"] = {
     "name": "My Custom Persona",
@@ -101,4 +111,3 @@ PERSONA_PRESETS["my_custom_persona"] = {
 }
 ```
 Any changes are instantly reflected in the application.
-

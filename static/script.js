@@ -1,5 +1,5 @@
 /**
- * Aura — Groq Personal Assistant Frontend Engine
+ * Aura — Groq Personal Assistant with Tavily Web Search Frontend Engine
  */
 
 (function () {
@@ -8,6 +8,7 @@
   // --- STATE ---
   let appConfig = {
     hasServerApiKey: false,
+    hasServerTavilyKey: false,
     defaultModel: 'llama-3.3-70b-versatile',
     models: [],
     personas: {},
@@ -16,6 +17,8 @@
 
   let state = {
     apiKey: localStorage.getItem('groq_custom_api_key') || '',
+    tavilyApiKey: localStorage.getItem('tavily_custom_api_key') || '',
+    webSearchEnabled: localStorage.getItem('web_search_enabled') === 'true',
     activeModel: localStorage.getItem('groq_active_model') || 'llama-3.3-70b-versatile',
     activePersona: localStorage.getItem('groq_active_persona') || 'executive',
     customSystemPrompt: localStorage.getItem('groq_custom_system_prompt') || '',
@@ -43,11 +46,14 @@
     historyList: document.getElementById('history-list'),
     statusDot: document.getElementById('status-dot'),
     statusText: document.getElementById('status-text'),
+    tavilyStatusDot: document.getElementById('tavily-status-dot'),
+    tavilyStatusText: document.getElementById('tavily-status-text'),
     openSettingsBtn: document.getElementById('open-settings-btn'),
 
     // Header
     activePersonaBadge: document.getElementById('active-persona-badge'),
     activeModelBadge: document.getElementById('active-model-badge'),
+    activeSearchBadge: document.getElementById('active-search-badge'),
     exportChatBtn: document.getElementById('export-chat-btn'),
     clearChatBtn: document.getElementById('clear-chat-btn'),
     themeToggleBtn: document.getElementById('theme-toggle-btn'),
@@ -62,15 +68,19 @@
     userInput: document.getElementById('user-input'),
     sendBtn: document.getElementById('send-btn'),
     stopBtn: document.getElementById('stop-btn'),
+    webSearchToggleBtn: document.getElementById('web-search-toggle-btn'),
 
     // Modal
     settingsModal: document.getElementById('settings-modal'),
     closeModalBtn: document.getElementById('close-modal-btn'),
     apiKeyInput: document.getElementById('api-key-input'),
     toggleKeyVisBtn: document.getElementById('toggle-key-visibility-btn'),
+    tavilyKeyInput: document.getElementById('tavily-key-input'),
+    toggleTavilyVisBtn: document.getElementById('toggle-tavily-vis-btn'),
     maxTokensSlider: document.getElementById('max-tokens-slider'),
     maxTokensVal: document.getElementById('max-tokens-val'),
     testKeyBtn: document.getElementById('test-key-btn'),
+    testTavilyBtn: document.getElementById('test-tavily-btn'),
     saveSettingsBtn: document.getElementById('save-settings-btn'),
     keyTestFeedback: document.getElementById('key-test-feedback'),
   };
@@ -130,6 +140,8 @@
     applyStateToUI();
     loadOrCreateActiveChat();
     updateKeyStatusIndicator();
+    updateTavilyStatusIndicator();
+    updateWebSearchToggleUI();
   }
 
   // --- SERVER CONFIG ---
@@ -140,6 +152,8 @@
         appConfig = await res.json();
         populateModelsDropdown();
         populatePersonasDropdown();
+        updateKeyStatusIndicator();
+        updateTavilyStatusIndicator();
       }
     } catch (err) {
       console.warn('Could not load /api/config:', err);
@@ -160,7 +174,6 @@
 
   function populatePersonasDropdown() {
     if (!appConfig.personas) return;
-    const currentVal = el.personaSelect.value;
     el.personaSelect.innerHTML = '';
 
     for (const [key, p] of Object.entries(appConfig.personas)) {
@@ -187,7 +200,7 @@
     el.personaSelect.value = state.activePersona;
     handlePersonaChange();
 
-    // Slider
+    // Sliders
     el.tempSlider.value = state.temperature;
     el.tempVal.textContent = state.temperature.toFixed(1);
 
@@ -195,6 +208,7 @@
     el.maxTokensVal.textContent = state.maxTokens;
 
     el.apiKeyInput.value = state.apiKey;
+    el.tavilyKeyInput.value = state.tavilyApiKey;
 
     updateHeaderBadges();
   }
@@ -209,10 +223,33 @@
     const hasKey = Boolean(state.apiKey.trim() || appConfig.has_server_api_key);
     if (hasKey) {
       el.statusDot.className = 'status-dot green';
-      el.statusText.textContent = state.apiKey.trim() ? 'Custom Key Active' : 'Groq API Active';
+      el.statusText.textContent = state.apiKey.trim() ? 'Groq (Custom)' : 'Groq Ready';
     } else {
       el.statusDot.className = 'status-dot red';
-      el.statusText.textContent = 'API Key Needed';
+      el.statusText.textContent = 'Groq (No Key)';
+    }
+  }
+
+  function updateTavilyStatusIndicator() {
+    if (!el.tavilyStatusDot || !el.tavilyStatusText) return;
+    const hasKey = Boolean(state.tavilyApiKey.trim() || appConfig.has_server_tavily_key);
+    if (hasKey) {
+      el.tavilyStatusDot.className = 'status-dot blue';
+      el.tavilyStatusText.textContent = state.tavilyApiKey.trim() ? 'Tavily (Custom)' : 'Tavily Ready';
+    } else {
+      el.tavilyStatusDot.className = 'status-dot';
+      el.tavilyStatusText.textContent = 'Tavily (No Key)';
+    }
+  }
+
+  function updateWebSearchToggleUI() {
+    if (!el.webSearchToggleBtn) return;
+    if (state.webSearchEnabled) {
+      el.webSearchToggleBtn.classList.add('active');
+      if (el.activeSearchBadge) el.activeSearchBadge.classList.remove('hidden');
+    } else {
+      el.webSearchToggleBtn.classList.remove('active');
+      if (el.activeSearchBadge) el.activeSearchBadge.classList.add('hidden');
     }
   }
 
@@ -257,6 +294,15 @@
 
     el.sendBtn.addEventListener('click', sendMessage);
     el.stopBtn.addEventListener('click', stopGenerating);
+
+    // Web Search Toggle Button
+    if (el.webSearchToggleBtn) {
+      el.webSearchToggleBtn.addEventListener('click', () => {
+        state.webSearchEnabled = !state.webSearchEnabled;
+        localStorage.setItem('web_search_enabled', state.webSearchEnabled ? 'true' : 'false');
+        updateWebSearchToggleUI();
+      });
+    }
 
     // Persona change
     el.personaSelect.addEventListener('change', () => {
@@ -310,19 +356,38 @@
       if (e.target === el.settingsModal) closeSettingsModal();
     });
 
+    // Groq key visibility toggle
     el.toggleKeyVisBtn.addEventListener('click', () => {
       const isPass = el.apiKeyInput.type === 'password';
       el.apiKeyInput.type = isPass ? 'text' : 'password';
       el.toggleKeyVisBtn.textContent = isPass ? 'Hide' : 'Show';
     });
 
+    // Tavily key visibility toggle
+    if (el.toggleTavilyVisBtn && el.tavilyKeyInput) {
+      el.toggleTavilyVisBtn.addEventListener('click', () => {
+        const isPass = el.tavilyKeyInput.type === 'password';
+        el.tavilyKeyInput.type = isPass ? 'text' : 'password';
+        el.toggleTavilyVisBtn.textContent = isPass ? 'Hide' : 'Show';
+      });
+    }
+
     el.testKeyBtn.addEventListener('click', testApiKey);
+    if (el.testTavilyBtn) {
+      el.testTavilyBtn.addEventListener('click', testTavilyKey);
+    }
     el.saveSettingsBtn.addEventListener('click', saveSettings);
 
     // Starter cards click
     document.querySelectorAll('.starter-card').forEach((card) => {
       card.addEventListener('click', () => {
         const prompt = card.getAttribute('data-prompt');
+        const isSearch = card.getAttribute('data-search') === 'true';
+        if (isSearch && !state.webSearchEnabled) {
+          state.webSearchEnabled = true;
+          localStorage.setItem('web_search_enabled', 'true');
+          updateWebSearchToggleUI();
+        }
         if (prompt) {
           el.userInput.value = prompt;
           el.userInput.dispatchEvent(new Event('input'));
@@ -519,7 +584,6 @@
     // 1. Append User Message
     chat.messages.push({ role: 'user', content: text });
     if (chat.messages.length === 1) {
-      // Auto-set title from first message
       chat.title = text.length > 36 ? text.substring(0, 36) + '...' : text;
       renderHistoryList();
     }
@@ -533,9 +597,15 @@
 
     // 2. Prepare Assistant Bubble for Streaming
     const assistantBubble = appendMessageToDOM('assistant', '');
+    assistantBubble.innerHTML = ''; // Start clean
+
+    // Container for streaming text
+    const textBody = document.createElement('div');
+    textBody.className = 'message-text-body';
     const cursor = document.createElement('span');
     cursor.className = 'streaming-cursor';
-    assistantBubble.appendChild(cursor);
+    textBody.appendChild(cursor);
+    assistantBubble.appendChild(textBody);
 
     // 3. UI State: Streaming
     state.isStreaming = true;
@@ -552,6 +622,8 @@
       temperature: state.temperature,
       max_tokens: state.maxTokens,
       api_key: state.apiKey.trim() || undefined,
+      web_search: state.webSearchEnabled,
+      tavily_api_key: state.tavilyApiKey.trim() || undefined,
     };
 
     try {
@@ -577,7 +649,7 @@
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop(); // Keep partial line for next iteration
+        buffer = lines.pop();
 
         for (const line of lines) {
           const trimmed = line.trim();
@@ -593,13 +665,75 @@
             if (parsed.error) {
               throw new Error(parsed.error);
             }
+
+            // Handle Tavily search starting event
+            if (parsed.type === 'search_start') {
+              let statusBar = assistantBubble.querySelector('.search-status-bar');
+              if (!statusBar) {
+                statusBar = document.createElement('div');
+                statusBar.className = 'search-status-bar';
+                statusBar.innerHTML = `
+                  <div class="search-spinner"></div>
+                  <span>Searching web via Tavily for: "<strong>${escapeHtml(parsed.query || '')}</strong>"...</span>
+                `;
+                assistantBubble.insertBefore(statusBar, textBody);
+                scrollToBottom();
+              }
+            }
+
+            // Handle Tavily search results event
+            if (parsed.type === 'search_results') {
+              let statusBar = assistantBubble.querySelector('.search-status-bar');
+              if (statusBar) {
+                if (parsed.success && parsed.results && parsed.results.length > 0) {
+                  statusBar.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Found ${parsed.results.length} relevant web sources</span>
+                  `;
+                } else if (!parsed.success) {
+                  statusBar.innerHTML = `
+                    <span style="color: var(--warning);">⚠ ${escapeHtml(parsed.error || 'Web search did not return results.')}</span>
+                  `;
+                }
+              }
+
+              // Render source citations pills
+              if (parsed.results && parsed.results.length > 0) {
+                let sourcesBox = assistantBubble.querySelector('.search-sources-box');
+                if (!sourcesBox) {
+                  sourcesBox = document.createElement('div');
+                  sourcesBox.className = 'search-sources-box';
+                  const header = `<div class="sources-header">🌐 Web Sources (${parsed.results.length})</div>`;
+                  const pills = parsed.results.map((r, i) => {
+                    let hostname = 'source';
+                    try {
+                      hostname = new URL(r.url).hostname.replace('www.', '');
+                    } catch (e) {
+                      hostname = 'web';
+                    }
+                    const title = r.title || hostname;
+                    return `
+                      <a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="source-pill" title="${escapeHtml(title)}: ${escapeHtml(r.content || '')}">
+                        <span class="source-pill-title">${escapeHtml(title)}</span>
+                      </a>
+                    `;
+                  }).join('');
+                  sourcesBox.innerHTML = `${header}<div class="sources-grid">${pills}</div>`;
+                  assistantBubble.insertBefore(sourcesBox, textBody);
+                  scrollToBottom();
+                }
+              }
+            }
+
+            // Handle text completion streaming
             if (parsed.content) {
               accumulatedContent += parsed.content;
-              // Render Markdown with streaming cursor attached
-              assistantBubble.innerHTML = window.marked
+              textBody.innerHTML = window.marked
                 ? marked.parse(accumulatedContent)
                 : escapeHtml(accumulatedContent);
-              assistantBubble.appendChild(cursor);
+              textBody.appendChild(cursor);
               scrollToBottom();
             }
           } catch (jsonErr) {
@@ -623,13 +757,13 @@
           saveConversations();
         }
       } else {
-        const errMsg = err.message || 'Error communicating with Groq.';
-        assistantBubble.innerHTML = `
+        const errMsg = err.message || 'Error communicating with assistant.';
+        textBody.innerHTML = `
           <div class="feedback-alert error">
             <strong>Assistant Error:</strong> ${escapeHtml(errMsg)}
           </div>
         `;
-        if (errMsg.includes('API key')) {
+        if (errMsg.toLowerCase().includes('groq api key') || errMsg.toLowerCase().includes('tavily api key')) {
           openSettingsModal();
         }
       }
@@ -675,9 +809,10 @@
     URL.revokeObjectURL(url);
   }
 
-  // --- SETTINGS MODAL & TEST KEY ---
+  // --- SETTINGS MODAL & TEST KEYS ---
   function openSettingsModal() {
     el.apiKeyInput.value = state.apiKey;
+    if (el.tavilyKeyInput) el.tavilyKeyInput.value = state.tavilyApiKey;
     el.keyTestFeedback.className = 'feedback-alert hidden';
     el.keyTestFeedback.textContent = '';
     el.settingsModal.classList.remove('hidden');
@@ -690,7 +825,7 @@
   async function testApiKey() {
     const key = el.apiKeyInput.value.trim();
     if (!key) {
-      showFeedback('Please enter an API key to test.', 'error');
+      showFeedback('Please enter a Groq API key to test.', 'error');
       return;
     }
 
@@ -708,21 +843,60 @@
       if (res.ok && data.valid) {
         showFeedback('Connection Successful! Groq API key is valid.', 'success');
       } else {
-        showFeedback(data.message || 'Key validation failed.', 'error');
+        showFeedback(data.message || 'Groq key validation failed.', 'error');
       }
     } catch (err) {
       showFeedback(`Test failed: ${err.message}`, 'error');
     } finally {
       el.testKeyBtn.disabled = false;
-      el.testKeyBtn.textContent = 'Test Connection';
+      el.testKeyBtn.textContent = 'Test Groq';
+    }
+  }
+
+  async function testTavilyKey() {
+    const key = el.tavilyKeyInput ? el.tavilyKeyInput.value.trim() : '';
+    if (!key) {
+      showFeedback('Please enter a Tavily API key to test.', 'error');
+      return;
+    }
+
+    el.testTavilyBtn.disabled = true;
+    el.testTavilyBtn.textContent = 'Testing...';
+    el.keyTestFeedback.className = 'feedback-alert hidden';
+
+    try {
+      const res = await fetch('/api/validate-tavily-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: key }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        showFeedback('Connection Successful! Tavily Web Search key is valid.', 'success');
+      } else {
+        showFeedback(data.message || 'Tavily validation failed.', 'error');
+      }
+    } catch (err) {
+      showFeedback(`Test failed: ${err.message}`, 'error');
+    } finally {
+      el.testTavilyBtn.disabled = false;
+      el.testTavilyBtn.textContent = 'Test Tavily';
     }
   }
 
   function saveSettings() {
-    const key = el.apiKeyInput.value.trim();
-    state.apiKey = key;
-    localStorage.setItem('groq_custom_api_key', key);
+    const groqKey = el.apiKeyInput.value.trim();
+    state.apiKey = groqKey;
+    localStorage.setItem('groq_custom_api_key', groqKey);
+
+    if (el.tavilyKeyInput) {
+      const tavilyKey = el.tavilyKeyInput.value.trim();
+      state.tavilyApiKey = tavilyKey;
+      localStorage.setItem('tavily_custom_api_key', tavilyKey);
+    }
+
     updateKeyStatusIndicator();
+    updateTavilyStatusIndicator();
     closeSettingsModal();
   }
 
@@ -733,7 +907,7 @@
   }
 
   function escapeHtml(str) {
-    return str
+    return String(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -744,4 +918,3 @@
   // Start application
   document.addEventListener('DOMContentLoaded', init);
 })();
-

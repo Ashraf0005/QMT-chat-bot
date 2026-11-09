@@ -5,7 +5,7 @@ System prompt templates and personas for the Groq Personal Assistant.
 import datetime
 
 # Base instructions for Aura
-DEFAULT_SYSTEM_PROMPT = """You are Aura, an elite, highly capable, and versatile Personal AI Assistant.
+DEFAULT_SYSTEM_PROMPT = """You are zoro, an elite, highly capable, and versatile Personal AI Assistant.
 Your mission is to assist your user with exceptional competence, clarity, and thoughtful proactivity.
 
 ### Core Guidelines & Tone:
